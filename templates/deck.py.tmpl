@@ -1,0 +1,24 @@
+"""Meeting slides. Add/reorder items in SLIDES; keep existing IDs stable."""
+from slidekit.dark import t, lines, slide, WHITE, BLACK as INK, ACCENT as TEAL, PANEL as MINT
+
+META = __META__
+EVIDENCE = {}  # Optional, deck-relative JSON files for interactive evidence.
+
+SLIDES = [
+    slide('recap', 'Recap', [
+        t(64, 54, META['title'], 44, True, WHITE),
+        t(64, 126, META['date_label'], 30, False, TEAL),
+        t(64, 280, 'What are we trying to achieve?', 38, True, WHITE),
+        t(64, 358, 'Add the project goal and last week’s context', 32, False, WHITE),
+    ], bg=INK, notes='Replace the template prompts with this meeting’s content.'),
+    slide('discussion', 'Discussion', [
+        t(64, 54, 'What should we discuss this week?', 42, True),
+        t(88, 250, 'Add one clear decision or open question', 34, True),
+        t(88, 315, 'Give the group the evidence needed to answer it', 30),
+    ], [(64, 215, 1024, 160, MINT)], notes='Capture recommendations and decisions in the presenter notes.'),
+    slide('progress', 'Progress and next steps', [
+        t(64, 54, 'Progress and next steps', 44, True),
+        t(64, 240, 'What changed since last week?', 34, True),
+        t(64, 355, 'What will we do next?', 34, True),
+    ], notes='Add a brief progress update and next steps.'),
+]

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" data-theme="{{THEME}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{PAGE_TITLE}}</title>
+<style>
+/* EMBEDDED_FONTS */
+/* PRESENTER_CSS */
+/* WIDGETS_CSS */
+</style>
+</head>
+<body class="loading">
+<section id="startup-screen" class="startup-screen" role="status" aria-live="polite" data-state="loading"><div class="startup-deck-title">{{DECK_TITLE}}</div><details id="startup-deck-menu" class="deck-menu startup-deck-menu" hidden><summary>Choose another presentation</summary><div class="deck-options"></div></details><h1>Loading presentation</h1><p id="startup-detail">Preparing all slides, videos, and fonts</p><progress id="startup-progress" max="1" value="0" aria-label="Presentation loading progress"></progress><button id="startup-retry" hidden>Retry loading</button></section>
+<div class="shell" inert>
+<header class="topbar"><div class="brand"><span id="deck-title">{{DECK_TITLE}}</span><details id="header-deck-menu" class="deck-menu header-deck-menu" hidden><summary>{{DECK_DATE}}</summary><div class="deck-options"></div></details><span class="date">{{DECK_DATE}}</span></div><div class="tools"><button id="sources">Sources</button><button id="overview" title="Slide overview (G)">Overview</button><button id="notes-toggle" aria-pressed="true" title="Toggle notes (N)">Notes</button><button id="audience-open" title="Open slides in a separate window; keep notes here">Audience window ↗</button><button id="fullscreen" class="primary" title="Fullscreen (F)">Fullscreen</button></div></header>
+<main class="workspace"><section class="stage" aria-label="Presentation"><div class="slide-frame"><div id="slide" class="slide"></div></div></section><aside class="notes" aria-label="Private presenter notes"><div class="note-meta"><h2>Presenter notes</h2><span id="note-number">01</span></div><p class="notes-only-tip">Capture advice and next steps. The audience window shows only slides.</p><div id="video-preload" class="video-preload" role="status" hidden><span id="video-preload-text"></span><button id="video-preload-retry" hidden>Retry video loading</button></div><div id="music-controls" hidden><p id="music-status"></p><button id="music-toggle">Mute music</button><input id="music-volume" type="range" min="0" max="100" step="1" value="8" aria-label="Background music volume"></div><div id="build-controls" hidden><p id="build-status" aria-live="polite"></p><div class="tools"><button id="build-play" aria-pressed="false">Play steps</button><button id="build-replay">Restart steps</button><button id="build-explore">Explore step</button></div></div><textarea id="notes-input" aria-label="Notes for the current slide" placeholder="Recommendations, decisions, next steps…"></textarea><div class="save-state" id="save-state" role="status">Saved in this browser</div><details><summary>Speaker prompts</summary><p id="speaker-prompts"></p></details><button id="export-notes">Export all notes ↓</button></aside></main>
+<footer class="bottom"><div class="navigation"><button id="prev" aria-label="Previous slide" title="Previous slide (←)">←</button><span class="counter" id="counter">1 / {{SLIDE_COUNT}}</span><button id="next" aria-label="Next slide" title="Next slide (→)">→</button></div><span class="slide-name" id="slide-name"></span><button class="help" id="help">Shortcuts ?</button></footer>
+</div>
+<div class="progress"><div id="progress"></div></div>
+<button class="audience-fullscreen" id="audience-fullscreen">Fullscreen</button>
+<div class="status-live" role="status" aria-live="polite" id="announcement"></div>
+<dialog id="overview-dialog"><div class="dialog-heading"><h2>Jump to a slide</h2><button data-close="overview-dialog">Close</button></div><div class="grid" id="overview-grid"></div></dialog>
+<dialog id="help-dialog"><div class="dialog-heading"><h2>Present at your pace</h2><button data-close="help-dialog">Close</button></div><div class="help-grid"><kbd>← / →</kbd><span>Previous / next slide</span><kbd>Space</kbd><span>Next slide</span><kbd>1–9</kbd><span>Jump to a slide</span><kbd>F</kbd><span>Toggle fullscreen</span><kbd>N</kbd><span>Show / hide notes</span><kbd>G</kbd><span>Slide overview</span><kbd>Esc</kbd><span>Close a dialog / leave fullscreen</span></div><p>Click a question to highlight it. Click again to clear it.</p><p>Use the controls on interactive slides to explore the evidence. Use Sources for context and citations.</p></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+/* DECK_DATA */
+/* WIDGETS_JS */
+/* MOTION_JS */
+/* VIDEO_JS */
+/* SCENES_JS */
+/* AUDIO_JS */
+/* STARTUP_JS */
+/* PRESENTER_JS */
+</script>
+</body>
+</html>

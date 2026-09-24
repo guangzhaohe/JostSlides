@@ -1,0 +1,16 @@
+{
+  "name": "slidekit-motion",
+  "private": true,
+  "scripts": {
+    "build": "esbuild index.jsx --bundle --minify --format=iife --define:process.env.NODE_ENV=\"\\\"production\\\"\" --outfile=runtime.js"
+  },
+  "dependencies": {
+    "@remotion/player": "4.0.526",
+    "remotion": "4.0.526",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}
