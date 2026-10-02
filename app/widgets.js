@@ -5,6 +5,94 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const pct=x=>x==null?'No fit':x.toFixed(2)+'%';
 function widgetChange(key,value){widgetState[key]=value;render();sync();}
 function option(value,label,selected){return `<option value="${esc(value)}" ${String(value)===String(selected)?'selected':''}>${esc(label)}</option>`;}
+let choiceMenu=null,choiceMenuId=0;
+function closeChoiceMenu(){
+ if(!choiceMenu)return;
+ choiceMenu.button.setAttribute('aria-expanded','false');
+ choiceMenu.button.removeAttribute('aria-activedescendant');
+ choiceMenu.menu.remove();choiceMenu=null;
+}
+function styleSelects(root){
+ // Keep native values/change events for the widgets; replace only their UI.
+ for(const select of root.querySelectorAll('select')){
+  const style=getComputedStyle(select),font=style.font,padding=style.padding,margin=style.marginTop;
+  const control=document.createElement('span');control.className='choice-control';control.style.marginTop=margin;
+  select.before(control);control.append(select);select.classList.add('choice-native');select.style.margin='0';
+  select.tabIndex=-1;select.setAttribute('aria-hidden','true');
+  const button=document.createElement('button');button.type='button';button.className='choice-trigger';
+  button.style.font=font;button.style.padding=padding;button.style.paddingRight='1.6em';
+  button.setAttribute('role','combobox');button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
+  button.setAttribute('aria-label',select.getAttribute('aria-label')||select.closest('label')?.firstChild.textContent.trim()||'Choose an option');
+  const label=document.createElement('span');label.className='choice-label';button.append(label);control.append(button);
+  const menuId='choice-menu-'+(++choiceMenuId);button.setAttribute('aria-controls',menuId);
+  function update(){label.textContent=select.selectedOptions[0]?.textContent||'';button.disabled=select.disabled;}
+  function choose(index){
+   const value=select.options[index];if(!value||value.disabled)return;
+   closeChoiceMenu();select.value=value.value;update();
+   select.dispatchEvent(new Event('change',{bubbles:true}));
+   // Re-rendered evidence controls retain keyboard focus on the same field.
+   const replacement=select.id?document.getElementById(select.id):select;
+   replacement?.closest('.choice-control')?.querySelector('.choice-trigger')?.focus();
+  }
+  function highlight(index){
+   if(!choiceMenu||choiceMenu.button!==button)return;
+   const items=choiceMenu.items;
+   choiceMenu.active=Math.max(0,Math.min(items.length-1,index));
+   items.forEach((item,i)=>item.dataset.active=String(i===choiceMenu.active));
+   const item=items[choiceMenu.active];button.setAttribute('aria-activedescendant',item.id);item.scrollIntoView({block:'nearest'});
+  }
+  function open(){
+   closeChoiceMenu();const menu=document.createElement('div');menu.className='choice-menu';menu.id=menuId;
+   menu.setAttribute('role','listbox');menu.setAttribute('aria-label',button.getAttribute('aria-label'));
+   const items=[...select.options].map((value,index)=>{
+    const item=document.createElement('button');item.type='button';item.className='choice-option';item.id=menuId+'-'+index;
+    item.setAttribute('role','option');item.setAttribute('aria-selected',String(value.selected));item.tabIndex=-1;
+    item.disabled=value.disabled;item.textContent=value.textContent;item.onclick=()=>choose(index);menu.append(item);return item;
+   });
+   // Popups escape the scaled/clipped slide but stay in a modal's top layer.
+   (button.closest('dialog')||document.body).append(menu);
+   const bounds=button.getBoundingClientRect(),scale=bounds.height/button.offsetHeight;
+   menu.style.fontSize=Math.max(16,parseFloat(getComputedStyle(button).fontSize)*scale)+'px';
+   const width=Math.min(innerWidth-24,Math.max(bounds.width,220));menu.style.width=width+'px';
+   menu.style.left=Math.max(12,Math.min(bounds.left,innerWidth-width-12))+'px';
+   const below=innerHeight-bounds.bottom-16,above=bounds.top-16,down=below>=Math.min(menu.scrollHeight,320)||below>=above;
+   menu.style.maxHeight=Math.max(40,Math.min(320,down?below:above))+'px';
+   if(down)menu.style.top=(bounds.bottom+8)+'px';else menu.style.bottom=(innerHeight-bounds.top+8)+'px';
+   choiceMenu={button,menu,items,active:select.selectedIndex};button.setAttribute('aria-expanded','true');highlight(select.selectedIndex);
+  }
+  button.onclick=()=>{if(choiceMenu?.button===button)closeChoiceMenu();else open();};
+  let search='',searchedAt=0;
+  button.onkeydown=event=>{
+   if(event.ctrlKey||event.metaKey||event.altKey)return;
+   const key=event.key,isOpen=choiceMenu?.button===button;
+   if(key==='Tab'){closeChoiceMenu();return;}
+   if(!['ArrowDown','ArrowUp','Home','End','Enter',' ','Escape'].includes(key)&&key.length!==1){closeChoiceMenu();return;}
+   if(key==='Escape'&&!isOpen)return;
+   event.preventDefault();event.stopPropagation();
+   if(key==='Escape'){closeChoiceMenu();return;}
+   if(key==='Enter'||key===' '){if(isOpen)choose(choiceMenu.active);else open();return;}
+   if(!isOpen)open();
+   if(key==='ArrowDown'||key==='ArrowUp'){
+    const direction=key==='ArrowDown'?1:-1;let next=choiceMenu.active+direction;
+    while(next>=0&&next<select.options.length&&select.options[next].disabled)next+=direction;
+    highlight(next);
+   }else if(key==='Home'||key==='End')highlight(key==='Home'?0:select.options.length-1);
+   else{
+    const now=Date.now();search=now-searchedAt>700?key:search+key;searchedAt=now;
+    const found=[...select.options].findIndex(o=>!o.disabled&&o.textContent.toLowerCase().startsWith(search.toLowerCase()));
+    if(found>=0)highlight(found);
+   }
+  };
+  select.addEventListener('change',update);
+  select.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();button.focus();button.click();});
+  update();
+ }
+}
+document.addEventListener('pointerdown',event=>{
+ if(choiceMenu&&!choiceMenu.menu.contains(event.target)&&!choiceMenu.button.contains(event.target))closeChoiceMenu();
+});
+window.addEventListener('resize',closeChoiceMenu);
+document.addEventListener('scroll',event=>{if(choiceMenu&&!choiceMenu.menu.contains(event.target))closeChoiceMenu();},true);
 function evaluateDiode(){
  const p=RECIPES[widgetState.policy]||widgetState.custom;
  return EVIDENCE.diode.cases.filter(c=>widgetState.env==='all'||c.environment===widgetState.env).map(c=>{
@@ -16,7 +104,7 @@ function evaluateDiode(){
 function renderEvidence(el,type,mini){
  const w=document.createElement('div');w.className='evidence '+type;el.append(w);
  if(type==='diode')renderDiode(w,mini);else if(type==='predictions')renderPredictions(w,mini);else renderReal(w,mini);
- if(mini){w.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));w.querySelectorAll('select,button,[tabindex]').forEach(e=>e.tabIndex=-1);}
+ if(mini){w.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));w.querySelectorAll('select,button,[tabindex]').forEach(e=>e.tabIndex=-1);}else styleSelects(w);
 }
 function renderDiode(w,mini){
  const rows=evaluateDiode(),kept=rows.filter(c=>c.kept),errors=kept.map(c=>c.m.error_pct),mean=errors.length?errors.reduce((a,b)=>a+b,0)/errors.length:null;
@@ -50,6 +138,7 @@ function openPolicy(){
  const p=RECIPES[widgetState.policy]||widgetState.custom;
  const configs=[['Objects before RANSAC',[0,1,2,3,5,10,20]],['Global inlier ratio',EVIDENCE.diode.ratios],['Maximum residual (%)',['off',2,4,6,8,10,12,14,16]],['Supporting anchors',[0,1,2,3,5,10,20]]];
  const d=evidenceDialog('Tune the saved rejection policy',`<div class="policy-grid">${configs.map(([label,values],i)=>`<label>${label}<select data-param="${i}">${values.map(v=>option(v,v,p[i])).join('')}</select></label>`).join('')}</div><p>Only the global ratio changes the fitted scale. Other controls accept or reject cases using stored diagnostics.</p><p>Error = 100 × |estimated scale − 1|. The range is the observed minimum–maximum, not a confidence interval.</p><button id="apply-policy" class="primary">Apply policy</button>`);
+ styleSelects(d);d.addEventListener('close',closeChoiceMenu,{once:true});
  d.querySelector('#apply-policy').onclick=()=>{widgetState.custom=[...d.querySelectorAll('[data-param]')].map(s=>s.value==='off'?'off':Number(s.value));widgetState.policy='custom';d.close();render();sync();};
 }
 function realOverlay(scene,m){

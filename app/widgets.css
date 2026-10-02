@@ -10,3 +10,19 @@
 [data-theme=black] .diode-chart svg,[data-theme=black] .real-caveat{fill:#c2c2c2;color:#c2c2c2}
 [data-theme=black] .rejected-result{color:#ebcb8b}
 [data-theme=black] .case-point:focus,[data-theme=black] .case-point:hover{stroke:#f5f5f5}
+
+/* Match the deck picker's field, chevron, popup, and selected-row treatment. */
+.choice-control{display:inline-grid;position:relative;min-width:0;max-width:100%;vertical-align:middle}
+.choice-control>.choice-native,.choice-control>.choice-trigger{grid-area:1/1;min-width:0;width:100%}
+.choice-control>.choice-native{opacity:0;pointer-events:none}
+.choice-trigger{display:flex;align-items:center;position:relative;text-align:left;cursor:pointer}
+.choice-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.choice-trigger::after{content:'';position:absolute;right:.6em;top:45%;width:.22em;height:.22em;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-50%) rotate(45deg)}
+.choice-trigger[aria-expanded=true]::after{transform:translateY(0) rotate(225deg)}
+.diode-case .choice-control,.policy-grid .choice-control{width:100%}
+.choice-menu{position:fixed;z-index:1400;overflow:auto;overscroll-behavior:contain;padding:8px;background:#141414;color:#f5f5f5;border:1px solid #353535;border-radius:14px;box-shadow:0 18px 55px #000b;font-family:Deck,Arial,sans-serif}
+.choice-option{display:block;width:100%;padding:10px 14px;border:0;border-radius:10px;text-align:left;font:inherit;color:inherit;background:transparent;line-height:1.35}
+.choice-option:hover,.choice-option[data-active=true]{background:#242424}
+.choice-option[aria-selected=true]{color:#b8e3d1;background:#b8e3d112;box-shadow:inset 3px 0 #b8e3d1}
+[data-theme=black] .choice-trigger:hover{background:#242424}
+.choice-trigger:focus-visible{outline:3px solid #b8e3d1;outline-offset:4px}

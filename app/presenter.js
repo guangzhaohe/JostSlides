@@ -71,6 +71,7 @@ function renderCoverParticles(el,mini){
  requestAnimationFrame(paint);
 }
 function renderInto(el,index,mini=false){
+ if(!mini)closeChoiceMenu();
  const original=SLIDES[index];
  const detail=!mini&&buildDetail&&original.builds?.[buildStep]?.detail;
  const spec=detail||original;

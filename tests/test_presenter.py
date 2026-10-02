@@ -143,6 +143,34 @@ class PresenterTest(unittest.TestCase):
         self.assertIn('Rejected',self.page.locator('#prediction-status').inner_text())
         expect(self.page.locator('#prediction-error')).to_have_text('25.00%')
 
+    def test_dropdown_mouse_keyboard_and_policy_dialog(self):
+        self.go('moge2-results')
+        field = self.page.get_by_role('combobox',name='Evidence environment',exact=True)
+        field.click()
+        expect(self.page.get_by_role('listbox',name='Evidence environment',exact=True)).to_be_visible()
+        self.page.get_by_role('option',name='Outdoor',exact=True).click()
+        expect(self.page.locator('#diode-coverage')).to_have_text('2 / 5')
+        expect(field).to_have_attribute('aria-expanded','false')
+        # Arrow keys belong to the dropdown, not to presentation navigation.
+        field.press('Enter');field.press('Home');field.press('Enter')
+        expect(self.page.locator('#diode-env')).to_have_value('all')
+        expect(self.page.locator('#counter')).to_have_text('15 / 22')
+        field.press('ArrowDown');field.press('Escape')
+        expect(self.page.locator('#diode-env')).to_have_value('all')
+        expect(self.page.get_by_role('listbox')).to_have_count(0)
+        field.press('o');field.press('Enter')
+        expect(self.page.locator('#diode-env')).to_have_value('outdoor')
+        self.page.locator('#policy-settings').click()
+        threshold = self.page.get_by_role('combobox',name='Maximum residual (%)',exact=True)
+        threshold.click();self.page.keyboard.press('Escape')
+        expect(self.page.locator('#evidence-dialog')).to_be_visible()
+        threshold.click();self.page.get_by_role('option',name='off',exact=True).click()
+        self.page.locator('#apply-policy').click()
+        expect(self.page.locator('#diode-coverage')).to_have_text('3 / 5')
+        self.page.get_by_role('combobox',name='Evidence environment',exact=True).click()
+        self.page.locator('#next').click()
+        expect(self.page.get_by_role('listbox')).to_have_count(0)
+
     def test_orbit_viewers_keep_geometry_upright_and_follow_vertical_drag(self):
         # Known landmarks distinguish world orientation from the pointer convention.
         # Record actual canvas draws rather than merely checking a pitch formula.
