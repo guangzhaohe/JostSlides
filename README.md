@@ -1,4 +1,4 @@
-# JostSlides
+# <img src="app/icons/jostslides.png" width="48" height="48" alt=""> JostSlides
 
 JostSlides is a local-first presentation framework for research talks. Decks are written in Python, rendered as offline HTML, and presented through a browser interface with speaker notes, an audience window, videos, interactive demos, and optional Remotion animation.
 

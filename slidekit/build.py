@@ -88,6 +88,7 @@ def build(deck, *, output=None, activate=True):
         })
     replacements = {
         '{{PAGE_TITLE}}': html.escape(deck.meta['title'] + ' — ' + deck.meta['date_label']),
+        '{{FAVICON}}': 'data:image/png;base64,' + base64.b64encode((ROOT / 'app/icons/jostslides.png').read_bytes()).decode(),
         '{{THEME}}': html.escape(deck.meta.get('theme', 'classic'), quote=True),
         '{{DECK_TITLE}}': html.escape(deck.meta['title']),
         '{{DECK_DATE}}': html.escape(deck.meta['date_label']) if deck.meta.get('show_date', True) else '',
