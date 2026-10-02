@@ -143,6 +143,73 @@ class PresenterTest(unittest.TestCase):
         self.assertIn('Rejected',self.page.locator('#prediction-status').inner_text())
         expect(self.page.locator('#prediction-error')).to_have_text('25.00%')
 
+    def test_orbit_viewers_keep_geometry_upright_and_follow_vertical_drag(self):
+        # Known landmarks distinguish world orientation from the pointer convention.
+        # Record actual canvas draws rather than merely checking a pitch formula.
+        self.page.evaluate('''() => {
+            const draw = CanvasRenderingContext2D.prototype.fillRect;
+            CanvasRenderingContext2D.prototype.fillRect = function(x,y,w,h) {
+                this.canvas.landmarks ??= [];
+                if (w < 10) this.canvas.landmarks.push({x,y,color:this.fillStyle});
+                else this.canvas.landmarks = [];
+                return draw.call(this,x,y,w,h);
+            };
+        }''')
+        for identity, kind in [('moge1-representation','cloud'),
+                               ('moge1-training','correction'),
+                               ('moge2-section','pair')]:
+            with self.subTest(kind=kind):
+                self.page.evaluate('''({index,kind}) => {
+                    const points = [[0,1,0],[0,-1,0],[0,0,-1],[0,0,1],[1,0,0],[-1,0,0]];
+                    const colors = [[255,0,0],[0,0,255],[255,255,255],[255,255,0],[255,0,255],[0,255,255]];
+                    const s = SLIDES[index].scene;
+                    s.initial_yaw = 0; s.initial_pitch = 0;
+                    delete widgetState.scenes?.[SLIDES[index].id+'-scene'];
+                    if (kind==='cloud') Object.assign(s,{points,colors});
+                    if (kind==='correction') Object.assign(s,{ground_truth:points,prediction:points,applied_scale:1});
+                    if (kind==='pair') for (const c of s.cases) {
+                        c.view={center:[0,0,0],radius:1,fit:90,projection_center:[0,0]};
+                        for (const frame of c.frames) Object.assign(frame,{points,colors});
+                    }
+                    go(index);
+                }''', {'index':self.ids.index(identity),'kind':kind})
+                canvases = self.page.locator('#slide canvas')
+                for panel in range(canvases.count()):
+                    canvas = canvases.nth(panel)
+                    marks = canvas.evaluate('c=>c.landmarks')
+                    if kind == 'correction':
+                        # At zero rotation, stable depth sorting draws the +Y
+                        # reference landmark before the -Y reference landmark.
+                        reference = [p for p in marks if p['color']=='#80dad6']
+                        self.assertLess(reference[1]['y'], reference[2]['y'])
+                    else:
+                        top = next(p for p in marks if p['color']=='#ff0000')
+                        bottom = next(p for p in marks if p['color']=='#0000ff')
+                        self.assertLess(top['y'],bottom['y'])
+                    box = canvas.bounding_box()
+                    self.page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2)
+                    self.page.mouse.down()
+                    self.page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2+24)
+                    self.page.mouse.up()
+                    state = self.page.evaluate('widgetState.scenes[SLIDES[current].id+"-scene"]')
+                    pitch = state['pitch'][panel] if kind=='pair' else state['pitch']
+                    self.assertLess(pitch,0)
+                    if kind != 'correction':
+                        before = next(p for p in marks if p['color']=='#ffffff')
+                        after = next(p for p in canvas.evaluate('c=>c.landmarks') if p['color']=='#ffffff')
+                        self.assertGreater(after['y'],before['y'])
+                    else:
+                        after = [p for p in canvas.evaluate('c=>c.landmarks') if p['color']=='#80dad6']
+                        self.assertGreater(after[-1]['y'],reference[-1]['y'])
+                    # Dragging back up restores the camera, for either panel.
+                    self.page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2+24)
+                    self.page.mouse.down()
+                    self.page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2)
+                    self.page.mouse.up()
+                    state = self.page.evaluate('widgetState.scenes[SLIDES[current].id+"-scene"]')
+                    pitch = state['pitch'][panel] if kind=='pair' else state['pitch']
+                    self.assertAlmostEqual(pitch,0)
+
     def test_video_advance_and_continuous_soundtrack(self):
         self.go('moge1-video')
         self.page.evaluate('document.querySelector("#slide video").play()')

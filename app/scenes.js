@@ -1,4 +1,5 @@
 // Self-contained scientific scenes. Data arrive embedded in the deck; no loaders.
+// Geometry uses positive Y up; canvas Y and vertical pointer motion run downward.
 function renderScene(el,spec,mini=false){
  if(spec.scene.kind==='correction')return renderCorrectionScene(el,spec,mini);
  if(spec.scene.kind==='pair')return renderPairScene(el,spec,mini);
@@ -47,7 +48,7 @@ function renderScene(el,spec,mini=false){
    const hint=document.createElement('span');hint.textContent='Drag to inspect';controls.append(hint);
   }
   let last=null,lastSync=0;canvas.onpointerdown=e=>{if(mini)return;last=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);e.stopPropagation();};
-  canvas.onpointermove=e=>{if(!last)return;state.yaw+=(e.clientX-last[0])*.008;state.pitch=Math.max(-1,Math.min(1,state.pitch+(e.clientY-last[1])*.008));last=[e.clientX,e.clientY];paint();if(performance.now()-lastSync>33){save();lastSync=performance.now();}};
+  canvas.onpointermove=e=>{if(!last)return;state.yaw+=(e.clientX-last[0])*.008;state.pitch=Math.max(-1,Math.min(1,state.pitch-(e.clientY-last[1])*.008));last=[e.clientX,e.clientY];paint();if(performance.now()-lastSync>33){save();lastSync=performance.now();}};
   canvas.onpointerup=e=>{last=null;save();};canvas.onpointercancel=()=>{last=null;};paint();
  }else if(scene.kind==='normalized-shift'){
   host.classList.add('normalized-shift-scene');
@@ -169,7 +170,7 @@ function renderCorrectionScene(el,spec,mini=false){
    ctx.fillStyle='#080c10';ctx.fillRect(0,0,340,300);
    const cloud=gt.map((p,j)=>[...project(p),0]).concat(pred.map((p,j)=>[...project(i?p.map(v=>v*scale):p),1]));
    cloud.sort((a,b)=>b[2]-a[2]);ctx.globalAlpha=.7;
-   for(const [x,y,z,kind] of cloud){ctx.fillStyle=kind?'#EC93D7':'#80DAD6';ctx.fillRect(170+(x-mx)*fit,150+(y-my)*fit,2.4,2.4);}
+   for(const [x,y,z,kind] of cloud){ctx.fillStyle=kind?'#EC93D7':'#80DAD6';ctx.fillRect(170+(x-mx)*fit,150-(y-my)*fit,2.4,2.4);}
    ctx.globalAlpha=1;
   });
   host.dataset.sharedYaw=String(state.yaw);host.dataset.sharedPitch=String(state.pitch);
@@ -177,7 +178,7 @@ function renderCorrectionScene(el,spec,mini=false){
  let last=null,lastSync=0;
  for(const canvas of canvases){
   canvas.onpointerdown=e=>{if(mini)return;last=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);e.stopPropagation();};
-  canvas.onpointermove=e=>{if(!last)return;state.yaw+=(e.clientX-last[0])*.008;state.pitch=Math.max(-1,Math.min(1,state.pitch+(e.clientY-last[1])*.008));last=[e.clientX,e.clientY];paint();if(performance.now()-lastSync>33){save();lastSync=performance.now();}};
+  canvas.onpointermove=e=>{if(!last)return;state.yaw+=(e.clientX-last[0])*.008;state.pitch=Math.max(-1,Math.min(1,state.pitch-(e.clientY-last[1])*.008));last=[e.clientX,e.clientY];paint();if(performance.now()-lastSync>33){save();lastSync=performance.now();}};
   canvas.onpointerup=()=>{last=null;save();};canvas.onpointercancel=()=>{last=null;};
  }
  reset.onclick=()=>{Object.assign(state,initial);paint();save();};if(mini)reset.hidden=true;
@@ -209,7 +210,7 @@ function renderPairScene(el,spec,mini=false){
    return [xx,yy,z2,j];}).sort((a,b)=>b[2]-a[2]);
   const fit=view.fit,[midX,midY]=view.projection_center;
   for(const [x,y,z,j] of projected){const c=colors[j];ctx.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;
-   ctx.fillRect(W/2+(x-midX)*fit,H/2+(y-midY)*fit,1.8,1.8);}
+   ctx.fillRect(W/2+(x-midX)*fit,H/2-(y-midY)*fit,1.8,1.8);}
  }
  scene.cases.forEach((choice,i)=>{
   const panel=document.createElement('div');panel.className='pair-panel';panel.style.left=(i?548:0)+'px';host.append(panel);
@@ -230,7 +231,7 @@ function renderPairScene(el,spec,mini=false){
   let last=null,lastSync=0;
   canvas.onpointerdown=e=>{if(mini)return;last=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);e.stopPropagation();};
   canvas.onpointermove=e=>{if(!last)return;state.yaw[i]+=(e.clientX-last[0])*.008;
-   state.pitch[i]=Math.max(-1,Math.min(1,state.pitch[i]+(e.clientY-last[1])*.008));last=[e.clientX,e.clientY];paint(i);
+   state.pitch[i]=Math.max(-1,Math.min(1,state.pitch[i]-(e.clientY-last[1])*.008));last=[e.clientX,e.clientY];paint(i);
    if(performance.now()-lastSync>33){save();lastSync=performance.now();}};
   canvas.onpointerup=()=>{last=null;save();};canvas.onpointercancel=()=>{last=null;};
  });
