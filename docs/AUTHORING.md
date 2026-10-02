@@ -79,12 +79,16 @@ Every asset needed during the talk must be inside the deck folder. The startup g
 
 ## Scientific scenes
 
-A slide may provide a `scene` specification. Shared rendering lives in `app/scenes.js`; validation lives in `slidekit/project.py`. The public MoGe deck demonstrates:
+A slide may provide a `scene` specification. Shared rendering lives in `app/scenes.js`; validation lives in `slidekit/project.py`. The public showcase demonstrates all supported scene kinds:
 
-- Interactive point clouds
-- Iterative image stages
-- A camera-projection ambiguity scene
-- The normalized scale-and-shift scene
+- Interactive point clouds, including raw/aligned comparison
+- Before/after correction with a shared orbit
+- Paired still and sequence galleries
+- Generic image stages
+- Camera-projection ambiguity
+- Normalized scale and shift
+
+The showcase also exercises all three evidence widgets with explicitly synthetic JSON fixtures. See the [feature index](../decks/2026-09-24/README.md) for controls and examples, or [A tiny talk](../decks/2026-10-02/README.md) for a minimal Python source example. The local header picker switches decks while keeping their note namespaces separate.
 
 When adding a scene kind, add validation, accessible controls, state synchronization through `widgetState.scenes`, and a browser regression test.
 

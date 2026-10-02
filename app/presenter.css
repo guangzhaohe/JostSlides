@@ -53,8 +53,8 @@
 .normalized-shift-scene canvas{cursor:default}
 .normalized-shift-scene canvas:active{cursor:default}
 .normalized-shift-scene .scene-controls{gap:30px;padding:0 20px;box-sizing:border-box}
-.normalized-shift-scene .scene-controls label{display:flex;align-items:center;gap:12px;font-size:28px;white-space:nowrap}
-.normalized-shift-scene .scene-controls input{width:230px}
+.normalized-shift-scene .scene-controls label{display:flex;flex:1;min-width:0;align-items:center;gap:12px;font-size:30px;white-space:nowrap}
+.normalized-shift-scene .scene-controls input{width:230px;flex:1;min-width:80px}
 .normalized-shift-scene .scene-controls output{min-width:62px;color:#b8e3d1;font-weight:700}
 .steps-scene{display:flex;flex-direction:column;background:#080c10}
 .steps-image{display:block;width:100%;height:calc(100% - 54px);object-fit:contain;background:#080c10}

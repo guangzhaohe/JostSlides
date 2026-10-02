@@ -6,7 +6,7 @@ function renderScene(el,spec,mini=false){
  const scene=spec.scene,host=document.createElement('div');host.className='scene-view';
  const bounds=scene.bounds||[48,168,1056,400];geometry(host,...bounds);host.style.position='absolute';
  const canvas=document.createElement('canvas');canvas.width=bounds[2]*2;canvas.height=(bounds[3]-54)*2;
- canvas.setAttribute('aria-label',scene.kind==='cloud'?'Colored reconstruction from the saved depth map':scene.kind==='normalized-shift'?'Interactive scale and shift equivalence under pinhole projection':'Two scaled scenes with an identical pinhole projection');
+ canvas.setAttribute('aria-label',scene.kind==='cloud'?'Interactive colored point cloud':scene.kind==='normalized-shift'?'Interactive scale and shift equivalence under pinhole projection':'Two scaled scenes with an identical pinhole projection');
  canvas.style.width=bounds[2]+'px';canvas.style.height=(bounds[3]-54)+'px';host.append(canvas);el.append(host);
  const ctx=canvas.getContext('2d');ctx.scale(2,2);const W=bounds[2],H=bounds[3]-54;
  host.addEventListener('click',e=>e.stopPropagation());
@@ -58,7 +58,9 @@ function renderScene(el,spec,mini=false){
   controls.append(scaleLabel,shiftLabel);
   function paint(){
    ctx.fillStyle='#080c10';ctx.fillRect(0,0,W,H);
-   const camera=[72,H/2+22],worldPx=60,baseDepth=4,baseHalf=1.05;
+   const camera=[72,H/2+10],baseDepth=4,baseHalf=1.05;
+   // Fit the full slider range while reserving space for the caption.
+   const worldPx=Math.min(60,(H-170)/(2*2.5*baseHalf),(W-160)/14);
    const scaledDepth=state.scale*baseDepth+state.shift,scaledHalf=state.scale*baseHalf;
    const normalizedShift=state.shift/state.scale,shiftOnlyDepth=baseDepth+normalizedShift,shiftOnlyHalf=baseHalf;
    const sx=camera[0]+scaledDepth*worldPx,nx=camera[0]+shiftOnlyDepth*worldPx;
@@ -77,7 +79,7 @@ function renderScene(el,spec,mini=false){
    textAt('Camera',18,camera[1]+70,'#EBCB8B',28);textAt('Image plane',105,52,'#EBCB8B',28);
    textAt(`Scale ${state.scale.toFixed(1)} then shift ${state.shift.toFixed(1)}`,520,48,'#EC93D7',28);
    textAt(`Shift only ${normalizedShift.toFixed(2)}`,520,88,'#b8e3d1',28);
-   textAt('Both land on the same two pixels',520,H-22,'#f5f5f5',30);
+   textAt('Same projection in both cases',520,H-22,'#f5f5f5',30);
    scaleOutput.value=state.scale.toFixed(1)+'×';shiftOutput.value=state.shift.toFixed(1);
    host.dataset.scale=state.scale.toFixed(1);host.dataset.shift=state.shift.toFixed(1);host.dataset.normalizedShift=normalizedShift.toFixed(3);
    host.dataset.projectionError=String(Math.abs(scaledHalf/scaledDepth-shiftOnlyHalf/shiftOnlyDepth));
@@ -120,14 +122,14 @@ function renderStepsScene(el,spec,mini=false){
  widgetState.scenes??={};const key=spec.id+'-scene';
  let state={step:0,...widgetState.scenes[key]};
  state.step=Math.max(0,Math.min(scene.frames.length-1,Number(state.step)||0));
- const image=document.createElement('img');image.className='steps-image';image.alt='Geometry refinement stage';host.append(image);
+ const image=document.createElement('img');image.className='steps-image';host.append(image);
  const controls=document.createElement('div');controls.className='scene-controls steps-controls';host.append(controls);
  const back=document.createElement('button');back.textContent='Previous';controls.append(back);
  const range=document.createElement('input');range.type='range';range.min=0;range.max=scene.frames.length-1;range.step=1;range.setAttribute('aria-label','Refinement step');controls.append(range);
  const next=document.createElement('button');next.textContent='Next';controls.append(next);
  const label=document.createElement('span');label.className='steps-label';controls.append(label);
  function save(){widgetState.scenes[key]={step:state.step};if(!mini)sync();}
- function paint(){const frame=scene.frames[state.step];image.src=frame.image;range.value=state.step;label.textContent=frame.label;host.dataset.step=String(state.step);back.disabled=state.step===0;next.disabled=state.step===scene.frames.length-1;}
+ function paint(){const frame=scene.frames[state.step];image.src=frame.image;image.alt=frame.label;range.value=state.step;label.textContent=frame.label;host.dataset.step=String(state.step);back.disabled=state.step===0;next.disabled=state.step===scene.frames.length-1;}
  function setStep(value){state.step=Math.max(0,Math.min(scene.frames.length-1,value));paint();save();}
  back.onclick=()=>setStep(state.step-1);next.onclick=()=>setStep(state.step+1);range.oninput=()=>setStep(Number(range.value));
  if(mini)controls.hidden=true;paint();
@@ -147,7 +149,7 @@ function renderCorrectionScene(el,spec,mini=false){
   host.append(canvas);canvases.push(canvas);const ctx=canvas.getContext('2d');ctx.scale(2,2);contexts.push(ctx);
  }
  const controls=document.createElement('div');controls.className='correction-controls';host.append(controls);
- const legend=document.createElement('span');legend.innerHTML='<span class="correction-gt">Ground truth</span><span class="correction-pred">MoGe3</span>';controls.append(legend);
+ const legend=document.createElement('span');legend.innerHTML='<span class="correction-gt">Reference</span><span class="correction-pred">Input</span>';controls.append(legend);
  const reset=document.createElement('button');reset.textContent='Reset view';controls.append(reset);
  const gt=scene.ground_truth,pred=scene.prediction,scale=scene.applied_scale;
  const all=gt.concat(pred,pred.map(p=>p.map(v=>v*scale)));
@@ -218,7 +220,7 @@ function renderPairScene(el,spec,mini=false){
   if(i===1){
    const controls=document.createElement('div');controls.className='pair-controls';panel.append(controls);
    const play=document.createElement('button');play.textContent='Play';controls.append(play);
-   const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=choice.frames.length-1;slider.step=1;slider.setAttribute('aria-label','DA3 video frame');controls.append(slider);
+   const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=choice.frames.length-1;slider.step=1;slider.setAttribute('aria-label','Sequence frame');controls.append(slider);
    const count=document.createElement('span');controls.append(count);Object.assign(item,{play,slider,count});
    slider.oninput=()=>{state.frame=Number(slider.value);paint(1);save();};
    play.onclick=()=>{if(timer){stop();return;}play.textContent='Pause';timer=setInterval(()=>{
